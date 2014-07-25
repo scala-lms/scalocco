@@ -23,29 +23,29 @@
         }
         h4, h5, h6 {
             color: #333;
-            margin: 6px 0 6px 0;
+            padding: 6px 0 6px 0;
             font-size: 13px;
         }
         h2, h3 {
-            margin-bottom: 0;
+            padding-bottom: 15px;
             color: #000;
             overflow: hidden;
         }
         h1 {
-            margin-top: 40px;
-            margin-bottom: 15px;
+            /*padding-top: 40px;*/
+            padding-bottom: 15px;
             color: #000;
         }
         #container {
             position: relative;
         }
-        #background {
+        /*#background {
             position: fixed;
             top: 0; left: 525px; right: 0; bottom: 0;
             background: #f5f5ff;
             border-left: 1px solid #e5e5ee;
             z-index: -1;
-        }
+        }*/
         #jump_to, #jump_page {
             background: white;
             -webkit-box-shadow: 0 0 25px #777; -moz-box-shadow: 0 0 25px #777;
@@ -122,7 +122,7 @@
             opacity: 1;
         }
         td.code, th.code {
-            padding: 14px 15px 16px 25px;
+            padding: 10px 10px 10px 50px;
             width: 100%;
             vertical-align: top;
             background: #f5f5ff;
@@ -154,7 +154,7 @@
         <div id="jump_wrapper">
             <div id="jump_page">
                 {{#sources}}
-                <a class="source" href="{{.}}.html">
+                <a class="source" href="{{.}}">
                     {{.}}
                 </a>
                 {{/sources}}
@@ -179,7 +179,7 @@
                     <a class="pilcrow" href="#section_{{index}}">&#182;</a>
                 </div>
                 {{{doc}}}
-            </td>
+            </td></tr><tr>
             <td class="code">
                 <pre><code class='prettyprint lang-scala'>{{code}}</code></pre>
             </td>

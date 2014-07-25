@@ -68,7 +68,7 @@ class Markdown {
 //Scalocco
 //---------------
 object Scalocco extends Markdown {
-    // This value is used to differentiate normal comments from scaladoc style.
+    /* This value is used to differentiate normal comments from scaladoc style. */
     val scaladoc = UUID.randomUUID().toString
 
     //ScalaDoc Parsing
@@ -184,20 +184,23 @@ object Scalocco extends Markdown {
             } else if (line.matches("[^*]*[*]/\\s*$")) {
                 inScalaDoc = false;
             // Reading a comment line `//` or ` * ` if inside `Scaladoc`
-            } else if (line.matches("^\\s*//.*") || (inScalaDoc && line.matches("^\\s*[*].*"))) {
+            //} else if (line.matches("^\\s*//.*") || inScalaDoc) {
+            } else if (inScalaDoc) {
                 // if we did had code, store the code and documentation in the resulting section list
                 if (hasCode) {
                     val documentation = scaladocIfNeeded(doc)
                     sections ::= Section(documentation, code.toString)
                     hasCode = false
                     doc = new StringBuilder
-                    if (inScalaDoc) doc.append(scaladoc)
+                    //if (inScalaDoc) doc.append(scaladoc)
                     code = new StringBuilder
                 }
-                doc.append(line.replaceFirst("^\\s*//", "")).append("\n")
+                val cleaned = line.replaceFirst(if (inScalaDoc) "^\\s*[*]" else "^\\s*//", "")
+                doc.append(cleaned).append("\n")
             } else {
                 hasCode = true
-                code.append(line).append("\n")
+                if (!code.isEmpty || !line.trim.isEmpty)
+                    code.append(line).append("\n")
                 inScalaDoc = false
             }
         )
@@ -213,19 +216,26 @@ object Scalocco extends Markdown {
      * @param path the Path of the original file.
      * @param destPath the Path where to write the documentation file.
      */
-    def documentFile(source: File, path: String, destPath: String) = {
+    def documentFile(source: File, path: String, destPath: String, templateFile: String) = {
         val sections = parseSections(source)
-        val mustache = new Mustache(Source.fromURL(getClass.getResource("/template.html")).mkString)
+        val template = if (templateFile == "default") Source.fromURL(getClass.getResource("/template.html")).mkString
+                       else Source.fromFile(templateFile).mkString
+        val mustache = new Mustache(template)
+        def outFile(destPath: String)(source: File) = {
+            new File(source.getCanonicalPath.replace(path, destPath).replace(".scala",".html"))
+        }
         val html = mustache.render(Map(
             // This is the title of the Scala source file
             "title" -> source.getName,
             // The sources are available in the right-upper box on the generated documentation
-            "sources" -> sources,
+            "destPath" -> destPath,
+            "sources" -> sources.map(outFile("")),
             // keep indexes for sections
             "sections" -> sections.zipWithIndex.map(t =>
                 Map("index" -> t._2, "code" -> t._1.code, "doc" -> t._1.doc.markdown))
         ))
-        val outputFile = new File(source.getCanonicalPath.replace(path, destPath) + ".html")
+        val outputFile = outFile(destPath)(source)
+        (new File(outputFile.getParent)).mkdirs
         println("Generating documentation: " + outputFile.getCanonicalPath)
         // output the HTML rendered with Mustache into a file named `SOURCE_FILE.scala.html`
         val p = new PrintWriter(outputFile)
@@ -237,7 +247,7 @@ object Scalocco extends Markdown {
      * @param path the Path were we may find some scala files.
      * @param destPath the Path were we should output the documentation.
      */
-    def generateDoc(path: String, destPath: String) = {
+    def generateDoc(path: String, destPath: String, template: String) = {
         val files = scalaFiles(path)
         sources = files.toList
 
@@ -249,7 +259,7 @@ object Scalocco extends Markdown {
         val dest = new File(destPath)
         if (!dest.exists()) dest.mkdirs()
 
-        files.foreach(documentFile(_, basePath, destPath))
+        files.foreach(documentFile(_, basePath, destPath, template))
     }
 
     /**
@@ -261,7 +271,8 @@ object Scalocco extends Markdown {
         else {
             val path = args(0)
             val destPath = if (args.length > 1) args(1) else "./docs/"
-            generateDoc(path, destPath)
+            val template = if (args.length > 2) args(2) else "default"
+            generateDoc(path, destPath, template)
         }
     }
 }

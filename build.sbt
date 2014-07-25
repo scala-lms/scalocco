@@ -12,7 +12,7 @@ startYear := Some(2013)
 
 version := "1.1.0"
 
-scalaVersion := "2.10.1"
+scalaVersion := "2.11.2"
 
 scalacOptions ++= Seq(
   "-unchecked"

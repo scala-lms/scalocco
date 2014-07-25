@@ -441,10 +441,9 @@ case class MustacheParseException(line:Int, msg:String)
       stack.headOption match {
         case None => None
         case Some(head) => {
-          type MapLikeString[a, b] = MapLike[String, a, b]
           head match {
               case null => None
-              case m:MapLikeString[_,_] =>
+              case m:Map[String,Any] =>
                 m.get(key) match {
                   case Some(v) => v
                   case None => None
