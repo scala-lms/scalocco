@@ -191,7 +191,7 @@ object Scalocco extends Markdown {
             // Reading a comment line `//` or ` * ` if inside `Scaladoc`
             //} else if (line.matches("^\\s*//.*") || inScalaDoc) {
             } else if (inScalaDoc) {
-                // if we did had code, store the code and documentation in the resulting section list
+                // if we had code, store the code and documentation in the resulting section list
                 if (hasCode) {
                     val documentation = scaladocIfNeeded(doc)
                     sections ::= Section(documentation, code.toString)
@@ -201,7 +201,15 @@ object Scalocco extends Markdown {
                     code = new StringBuilder
                 }
                 val cleaned = line.replaceFirst(if (inScalaDoc) "^\\s*[*]" else "^\\s*//", "")
-                doc.append(cleaned).append("\n")
+
+                val cmd = ".. includecode:: "
+                if (cleaned.trim.startsWith(cmd)) {
+                    val filename = cleaned.trim.substring(cmd.length)
+                    Source.fromFile(new File(source.getParent,filename)).getLines().foreach { inc =>
+                        doc.append("    ").append(inc).append("\n")
+                    }
+                } else
+                    doc.append(cleaned).append("\n")
             } else {
                 hasCode = true
                 if (!code.isEmpty || !line.trim.isEmpty)
