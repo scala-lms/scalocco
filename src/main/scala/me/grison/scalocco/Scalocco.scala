@@ -201,15 +201,25 @@ object Scalocco extends Markdown {
                     code = new StringBuilder
                 }
                 val cleaned = line.replaceFirst(if (inScalaDoc) "^\\s*[*]" else "^\\s*//", "")
-
-                val cmd = ".. includecode:: "
-                if (cleaned.trim.startsWith(cmd)) {
-                    val filename = cleaned.trim.substring(cmd.length)
-                    Source.fromFile(new File(source.getParent,filename)).getLines().foreach { inc =>
-                        doc.append("    ").append(inc).append("\n")
+                // look for command strings. example syntax:
+                //       .. includecode:: ../../../../out/dslapishonan-hmm.check.scala row_0
+                if (cleaned.trim.startsWith(".. ")) {
+                    val tokens = cleaned.trim.split("\\s+").toList.tail
+                    tokens match {
+                        case "includecode::"::filename::Nil =>
+                            val lines = Source.fromFile(new File(source.getParent,filename)).getLines()
+                            lines foreach { inc => doc.append("    ").append(inc).append("\n") }
+                        case "includecode::"::filename::tag::Nil =>
+                            val lines = Source.fromFile(new File(source.getParent,filename)).getLines()
+                            val cropped = lines.dropWhile(!_.contains(tag)).drop(1).takeWhile(!_.contains(tag))
+                            cropped foreach { inc => doc.append("    ").append(inc).append("\n") }
+                        case _ =>
+                            println("WARNING did not understand command: "+cleaned)
+                            doc.append(cleaned).append("\n")
                     }
-                } else
+                } else {
                     doc.append(cleaned).append("\n")
+                }
             } else {
                 hasCode = true
                 if (!code.isEmpty || !line.trim.isEmpty)
