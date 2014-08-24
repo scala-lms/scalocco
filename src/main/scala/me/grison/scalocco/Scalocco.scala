@@ -55,7 +55,12 @@ case class Section(doc: String, code: String)
 class Markdown {
     class MarkdownableString(s: String) {
         // *Markdownify* the given text.
-        def markdown = new Markdown4jProcessor().process(s)
+        def markdown = {
+            // FIXME: customize processor!!
+            val pc = new Markdown4jProcessor()
+            //pc.asInstanceOf[{}]
+            pc.process(s)
+        }
         // *Markdownify* the given text but removes the `<p/>` tags from the result
         def mkdNoP = markdown.replaceAll("</?p>", "").trim()
         // Creates a *Mustache* object whose template is the given String
@@ -172,7 +177,7 @@ object Scalocco extends Markdown {
         // will hold the sections in the file
         var sections = List[Section]()
         // the `hasCode` variable remembers if we were reading code before a comment
-        var (hasCode, inScalaDoc) = (false, false)
+        var (hasCode, inScalaDoc, inString) = (false, false, false)
         // the two buffers, one for documentation, the other for scala code
         var (doc, code) = (new StringBuilder, new StringBuilder)
         // for each line in the source code
