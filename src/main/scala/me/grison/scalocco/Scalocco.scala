@@ -205,18 +205,31 @@ object Scalocco extends Markdown {
                 //       .. includecode:: ../../../../out/dslapishonan-hmm.check.scala row_0
                 if (cleaned.trim.startsWith(".. ")) {
                     val tokens = cleaned.trim.split("\\s+").toList.tail
-                    tokens match {
-                        case "includecode::"::filename::Nil =>
-                            val lines = Source.fromFile(new File(source.getParent,filename)).getLines()
-                            lines foreach { inc => doc.append("    ").append(inc).append("\n") }
-                        case "includecode::"::filename::tag::Nil =>
-                            val lines = Source.fromFile(new File(source.getParent,filename)).getLines()
-                            val cropped = lines.dropWhile(!_.contains(tag)).drop(1).takeWhile(!_.contains(tag))
-                            cropped foreach { inc => doc.append("    ").append(inc).append("\n") }
-                        case _ =>
-                            println("WARNING did not understand command: "+cleaned)
-                            doc.append(cleaned).append("\n")
+                    val (ext, lines) = tokens match {
+                      case "includecode::"::filename::opts =>
+                        val lines = Source.fromFile(new File(source.getParent,filename)).getLines()
+                        val ext = filename.split('.').drop(1).lastOption
+                        println("ext is"+ext)
+                        val cropped = opts match {
+                          case Nil =>
+                            lines
+                          case tag::Nil =>
+                            lines.dropWhile(!_.contains(tag)).drop(1).takeWhile(!_.contains(tag))
+                          case _ =>
+                            println("WARNING too many options to includecode: "+opts)
+                            println("ignoring all options")
+                            lines
+                        }
+                        (ext, cropped)
+                      case _ =>
+                        println("WARNING did not understand command: "+cleaned)
+                        (None, List(cleaned))
                     }
+                    doc.append("```")
+                    ext foreach {inc => doc.append(" prettyprint lang-").append(inc)}
+                    doc.append("\n")
+                    lines foreach {inc => doc.append(inc).append("\n")}
+                    doc.append("```")
                 } else {
                     doc.append(cleaned).append("\n")
                 }
