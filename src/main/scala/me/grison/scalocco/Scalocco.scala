@@ -209,7 +209,6 @@ object Scalocco extends Markdown {
                       case "includecode::"::filename::opts =>
                         val lines = Source.fromFile(new File(source.getParent,filename)).getLines()
                         val ext = filename.split('.').drop(1).lastOption
-                        println("ext is"+ext)
                         val cropped = opts match {
                           case Nil =>
                             lines
