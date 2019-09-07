@@ -284,7 +284,8 @@ object Scalocco extends Markdown {
      */
     def generateDoc(path: String, destPath: String, template: String) = {
         val files = scalaFiles(path)
-        sources = files.toList
+        sources = files.toList.filter(!_.toString.contains("_")).sorted
+
 
         // if the given path is just a file, split the base part of it
         val pathFile = new File(path)
