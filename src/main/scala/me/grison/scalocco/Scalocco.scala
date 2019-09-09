@@ -59,7 +59,7 @@ class Markdown {
             // FIXME: customize processor!!
             val pc = new Markdown4jProcessor()
             //pc.asInstanceOf[{}]
-            pc.process(s)
+            pc.process(s).replaceAll("<br */>", "").replace("<br>","<br/>")
         }
         // *Markdownify* the given text but removes the `<p/>` tags from the result
         def mkdNoP = markdown.replaceAll("</?p>", "").trim()
